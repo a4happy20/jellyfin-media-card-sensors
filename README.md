@@ -17,7 +17,7 @@ Two trigger-based template sensors:
 
 | Entity | Source | Purpose |
 |--------|--------|---------|
-| `sensor.jellyfin_recent_card_data` | one REST sensor per library (YouTube / Anime / Ecchi in the example) | Recently added episodes, merged and tagged by library |
+| `sensor.jellyfin_recent_card_data` | one REST sensor per library (YouTube / Anime / Ecchi in the example(author's note: "For the western friends, yes, I watch ecchi, bite me..., purely jest my friends. Make mods not wars")) | Recently added episodes, merged and tagged by library |
 | `sensor.jellyfin_next_up_card_data` | Jellyfin `Shows/NextUp` | The user's "Next Up" queue |
 
 Each sensor's `episodes` attribute is a list of items shaped exactly the way the card
@@ -95,11 +95,11 @@ resolved inside a Jinja template string.)
 
 ### 4. Adjust libraries
 
-The example ships three "recently added" libraries. To add or remove one, edit three
-places, all labeled with comments in the YAML:
-1. the REST sensor block,
-2. the template sensor's `trigger` → `entity_id` list, and
-3. the template sensor's `sources` list.
+The example ships three "recently added" libraries. To add or remove one, edit three places:
+1. the secrets.yaml (see example file),
+2. the REST sensor block,
+3. the template sensor's `trigger` → `entity_id` list, and
+4. the template sensor's `sources` list.
 
 #### See the secrets.yaml example
 ```yaml
@@ -161,7 +161,7 @@ fetch briefly returns nothing.
 
 ## Using it with the card
 
-Once `sensor.jellyfin_recent_card_data` exists, add the card to a dashboard:
+Once `sensor.jellyfin_recent_card_data` exists, add the sensor entity to the card in the dashboard:
 
 ```yaml
 type: custom:jellyfin-media-card
