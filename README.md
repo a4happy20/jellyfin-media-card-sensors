@@ -43,6 +43,7 @@ homeassistant:
   packages: !include_dir_named packages
 ```
 
+Be sure to create the packages folder `config/packages/jellyfin_media_card.yaml`
 (If you already have a `homeassistant:` block, just add the `packages:` line under it.)
 Alternatively, include this one file directly:
 
@@ -54,7 +55,7 @@ homeassistant:
 
 ### 2. Add the package file
 
-Copy `jellyfin_media_card.yaml` into your `config/packages/` folder (create it if it
+Copy `jellyfin_media_card.yaml` into your `config/packages/jellyfin_media_card.yaml` folder (create it if it
 doesn't exist).
 
 ### 3. Add your secrets
