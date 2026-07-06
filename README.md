@@ -68,6 +68,31 @@ You must also set the base image URL inside `jellyfin_media_card.yaml`: replace
 from. (This lives in the template rather than `secrets.yaml` because `!secret` can't be
 resolved inside a Jinja template string.)
 
+#### sensor.jellyfin_recent_card_data
+```yaml
+    sensor:
+      - name: "Jellyfin Recent Card Data"
+        unique_id: jellyfin_recent_card_data
+        state: >
+          {% set eps = this.attributes.episodes | default([]) if this is defined else [] %}
+          {{ eps | length }}
+        attributes:
+          episodes: >
+            {% set base = 'https://YOUR_JELLYFIN_URL' %}
+```
+#### sensor.jellyfin_next_up_card_data
+```yaml
+    sensor:
+      - name: "Jellyfin Next Up Card Data"
+        unique_id: jellyfin_next_up_card_data
+        state: >
+          {% set eps = this.attributes.episodes | default([]) if this is defined else [] %}
+          {{ eps | length }}
+        attributes:
+          episodes: >
+            {% set base = 'https://YOUR_JELLYFIN_URL' %}
+```
+
 ### 4. Adjust libraries
 
 The example ships three "recently added" libraries. To add or remove one, edit three
