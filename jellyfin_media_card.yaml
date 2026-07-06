@@ -1,0 +1,176 @@
+# ============================================================
+# Jellyfin recently-added — per-library, cached, card-ready.
+#
+# Design:
+#  - One REST sensor per library (each scoped by ParentId → knows its library,
+#    returns Path reliably, and we filter LocationType==FileSystem to drop virtuals).
+#  - A trigger-based template sensor merges them, tags each item's library,
+#    and KEEPS THE LAST GOOD non-empty result if a fetch returns nothing.
+#
+# To change libraries / counts: edit the secrets URLs (Limit=N per library)
+# and add/remove a REST sensor block + its entry in the merge sensor's source list.
+# ============================================================
+
+# ---- secrets.yaml needs, for each library (URL WITHOUT api_key; auth via header) ----
+#   jellyfin_auth_header: 'MediaBrowser Token="YOURKEY"'
+#   jellyfin_recent_youtube: "http://YOUR_JELLYFIN_HOST:8096/Users/<UID>/Items?ParentId=<LIB_ID>&IncludeItemTypes=Episode&Recursive=true&SortBy=DateCreated&SortOrder=Descending&Fields=Overview,LocationType,Path,SeriesId,PremiereDate&Limit=3"
+#   jellyfin_recent_anime:   "...ParentId=<LIB_ID>...&Limit=3"
+#   jellyfin_recent_ecchi:   "...ParentId=<LIB_ID>...&Limit=3"
+
+# ---- secrets.yaml ----
+#   jellyfin_auth_header: 'MediaBrowser Token="YOURKEY"'
+#   jellyfin_nextup_url: "http://YOUR_JELLYFIN_HOST:8096/Shows/NextUp?userId=<UID>&Limit=10&Fields=Overview,LocationType,Path,SeriesId,DateCreated,ParentIndexNumber,IndexNumber&EnableImages=true"
+
+#---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
+#------------------------------------------------------REST SENSOR----------------------------------------------------------------------------------------------------------------------------------------------------------#
+#---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
+
+rest:
+  - resource: !secret jellyfin_recent_youtube
+    scan_interval: 300
+    headers:
+      Authorization: !secret jellyfin_auth_header
+    sensor:
+      - name: "Jellyfin Recent YouTube"
+        unique_id: jellyfin_recent_youtube
+        value_template: >
+          {{ (value_json.Items | default([])
+              | selectattr('LocationType','eq','FileSystem') | list | length)
+             if value_json is defined else 0 }}
+        json_attributes:
+          - Items
+
+  - resource: !secret jellyfin_recent_anime
+    scan_interval: 300
+    headers:
+      Authorization: !secret jellyfin_auth_header
+    sensor:
+      - name: "Jellyfin Recent Anime"
+        unique_id: jellyfin_recent_anime
+        value_template: >
+          {{ (value_json.Items | default([])
+              | selectattr('LocationType','eq','FileSystem') | list | length)
+             if value_json is defined else 0 }}
+        json_attributes:
+          - Items
+
+  - resource: !secret jellyfin_recent_ecchi
+    scan_interval: 300
+    headers:
+      Authorization: !secret jellyfin_auth_header
+    sensor:
+      - name: "Jellyfin Recent Ecchi"
+        unique_id: jellyfin_recent_ecchi
+        value_template: >
+          {{ (value_json.Items | default([])
+              | selectattr('LocationType','eq','FileSystem') | list | length)
+             if value_json is defined else 0 }}
+        json_attributes:
+          - Items
+
+  - resource: !secret jellyfin_nextup_url
+    scan_interval: 300
+    headers:
+      Authorization: !secret jellyfin_auth_header
+    sensor:
+      - name: "Jellyfin Next Up"
+        unique_id: jellyfin_next_up
+        value_template: >
+          {{ (value_json.Items | default([])
+              | selectattr('LocationType','eq','FileSystem') | list | length)
+             if value_json is defined else 0 }}
+        json_attributes:
+          - Items
+
+
+#---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
+#------------------------------------------------------TEMPLATE SENSOR------------------------------------------------------------------------------------------------------------------------------------------------------#
+#---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
+
+# ---- Trigger-based merge sensor: combines libraries, tags library, caches last good ----
+template:
+  - trigger:
+      - trigger: state
+        entity_id:
+          - sensor.jellyfin_recent_youtube
+          - sensor.jellyfin_recent_anime
+          - sensor.jellyfin_recent_ecchi
+      - trigger: homeassistant
+        event: start
+    sensor:
+      - name: "Jellyfin Recent Card Data"
+        unique_id: jellyfin_recent_card_data
+        state: >
+          {% set eps = this.attributes.episodes | default([]) if this is defined else [] %}
+          {{ eps | length }}
+        attributes:
+          episodes: >
+            {% set base = 'https://YOUR_JELLYFIN_URL' %}
+            {# --- source libraries: entity + library key. Edit to add/remove. --- #}
+            {% set sources = [
+                 ('sensor.jellyfin_recent_youtube', 'youtube'),
+                 ('sensor.jellyfin_recent_anime',   'anime'),
+                 ('sensor.jellyfin_recent_ecchi',   'ecchi')
+            ] %}
+            {% set ns = namespace(rows=[]) %}
+            {% for ent, libkey in sources %}
+              {% for e in (state_attr(ent,'Items') or [])
+                  | selectattr('LocationType','eq','FileSystem') | list %}
+                {% set ns.rows = ns.rows + [{
+                  'id': e.Id,
+                  'series': e.SeriesName | default(''),
+                  'season': e.ParentIndexNumber | default(0),
+                  'episode': e.IndexNumber | default(0),
+                  'title': e.Name | default(''),
+                  'overview': e.Overview | default(''),
+                  'library': libkey,
+                  'added': e.DateCreated | default(e.PremiereDate) | default(''),
+                  'episode_art': base ~ '/Items/' ~ e.Id ~ '/Images/Primary',
+                  'series_art': base ~ '/Items/' ~ (e.SeriesId | default(e.Id)) ~ '/Images/Primary'
+                }] %}
+              {% endfor %}
+            {% endfor %}
+            {# --- caching: if this fetch produced nothing, keep the previous good list --- #}
+            {% if ns.rows | length == 0 %}
+              {{ this.attributes.episodes | default([]) if this is defined else [] }}
+            {% else %}
+              {{ ns.rows }}
+            {% endif %}
+
+
+  - trigger:
+      - trigger: state
+        entity_id:
+          - sensor.jellyfin_next_up
+      - trigger: homeassistant
+        event: start
+    sensor:
+      - name: "Jellyfin Next Up Card Data"
+        unique_id: jellyfin_next_up_card_data
+        state: >
+          {% set eps = this.attributes.episodes | default([]) if this is defined else [] %}
+          {{ eps | length }}
+        attributes:
+          episodes: >
+            {% set base = 'https://YOUR_JELLYFIN_URL' %}
+            {% set ns = namespace(rows=[]) %}
+            {% for e in (state_attr('sensor.jellyfin_next_up','Items') or [])
+                | selectattr('LocationType','eq','FileSystem') | list %}
+              {% set ns.rows = ns.rows + [{
+                'id': e.Id,
+                'series': e.SeriesName | default(''),
+                'season': e.ParentIndexNumber | default(0),
+                'episode': e.IndexNumber | default(0),
+                'title': e.Name | default(''),
+                'overview': e.Overview | default(''),
+                'library': 'nextup',
+                'added': e.DateCreated | default(e.PremiereDate) | default(''),
+                'episode_art': base ~ '/Items/' ~ e.Id ~ '/Images/Primary',
+                'series_art': base ~ '/Items/' ~ (e.SeriesId | default(e.Id)) ~ '/Images/Primary'
+              }] %}
+            {% endfor %}
+            {% if ns.rows | length == 0 %}
+              {{ this.attributes.episodes | default([]) if this is defined else [] }}
+            {% else %}
+              {{ ns.rows }}
+            {% endif %}
