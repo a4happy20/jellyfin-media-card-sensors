@@ -98,8 +98,60 @@ resolved inside a Jinja template string.)
 The example ships three "recently added" libraries. To add or remove one, edit three
 places, all labeled with comments in the YAML:
 1. the REST sensor block,
-2. the merge sensor's `trigger` → `entity_id` list, and
-3. the merge sensor's `sources` list.
+2. the template sensor's `trigger` → `entity_id` list, and
+3. the template sensor's `sources` list.
+
+#### See the secrets.yaml example
+```yaml
+jellyfin_recent_youtube: "http://YOUR_JELLYFIN_HOST:8096/Users/<UID>/Items?ParentId=<LIB_ID>&IncludeItemTypes=Episode&Recursive=true&SortBy=DateCreated&SortOrder=Descending&Fields=Overview,LocationType,Path,SeriesId,PremiereDate&Limit=3"
+```
+
+#### sensor.jellyfin_recent_youtube
+```yaml
+rest:
+  - resource: !secret jellyfin_recent_youtube
+    scan_interval: 300
+    headers:
+      Authorization: !secret jellyfin_auth_header
+    sensor:
+      - name: "Jellyfin Recent YouTube"
+        unique_id: jellyfin_recent_youtube
+        value_template: >
+          {{ (value_json.Items | default([])
+              | selectattr('LocationType','eq','FileSystem') | list | length)
+             if value_json is defined else 0 }}
+        json_attributes:
+          - Items
+```
+
+#### sensor.jellyfin_recent_card_data
+```yaml
+template:
+  - trigger:
+      - trigger: state
+        entity_id:
+          - sensor.jellyfin_recent_youtube
+          - sensor.jellyfin_recent_anime
+          - sensor.jellyfin_recent_ecchi
+      - trigger: homeassistant
+        event: start
+    sensor:
+      - name: "Jellyfin Recent Card Data"
+        unique_id: jellyfin_recent_card_data
+        state: >
+          {% set eps = this.attributes.episodes | default([]) if this is defined else [] %}
+          {{ eps | length }}
+        attributes:
+          episodes: >
+            {% set base = 'https://YOUR_JELLYFIN_URL' %}
+            {# --- source libraries: entity + library key. Edit to add/remove. --- #}
+            {% set sources = [
+                 ('sensor.jellyfin_recent_youtube', 'youtube'),
+                 ('sensor.jellyfin_recent_anime',   'anime'),
+                 ('sensor.jellyfin_recent_ecchi',   'ecchi')
+            ] %}
+```
+
 
 ### 5. Check config and restart
 
