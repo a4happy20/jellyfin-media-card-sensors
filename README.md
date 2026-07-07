@@ -66,7 +66,7 @@ series_art`). Point the card's `entity` at whichever sensor you want to display.
 
 <br>
 
-### Easy to setup
+### Simple setup
 High level overview:
 
     • add the sensors to home assistant
@@ -75,7 +75,7 @@ High level overview:
 
 <br>
 
-### 0. Enable packages (Optional)
+## 0. Enable packages (Optional)
 <details>
   <summary>Package Setup</summary>
 
@@ -106,7 +106,7 @@ homeassistant:
 
 <br>
 
-### 1. Add the package file
+## 1. Add the package file
 
 Copy `jellyfin_media_card_sensors.yaml` into your `config/packages/jellyfin_media_card_sensors.yaml` folder.
 
@@ -116,7 +116,7 @@ Copy `jellyfin_media_card_sensors.yaml` into your `config/packages/jellyfin_medi
 
 <br>
 
-### 2. Add your secrets
+## 2. Add your secrets
 
 ```yaml
 # ======================================================================================
@@ -137,7 +137,7 @@ jellyfin_recent_library: "http://YOUR_JELLYFIN_HOST:8096/Users/<UID>/Items?Paren
 
 <br>
 
-### 3. Edit the template sensor
+## 3. Edit the template sensor
 
 You must also set the base image URL inside `jellyfin_media_card_sensors.yaml`: replace
 `http://YOUR_JELLYFIN_HOST:8096` (two places) with the url of your Jellyfin instance.
@@ -146,7 +146,7 @@ resolved inside a Jinja template string.)
 
 <br>
 
-### Template sensor.jellyfin_recent_card_data (NOT the full sensor, see the actual file)
+## Template sensor.jellyfin_recent_card_data (NOT the full sensor, see the actual file)
 
 <details>
     <summary>info</summary>
@@ -166,7 +166,7 @@ resolved inside a Jinja template string.)
 
 <br>
 
-### Template sensor.jellyfin_next_up_card_data (NOT the full sensor, see the actual file)
+## Template sensor.jellyfin_next_up_card_data (NOT the full sensor, see the actual file)
 <details>
     <summary>info</summary>
 
@@ -185,7 +185,7 @@ resolved inside a Jinja template string.)
 
 <br>
 
-### 4. Adjust libraries
+## 4. Adjust libraries
 
 Using the url you just set up and added to your secrets.yaml:
 1. you need to tell the sensor what library to monitor,
@@ -199,7 +199,7 @@ Using the url you just set up and added to your secrets.yaml:
 
 <br>
 
-### REST sensor.jellyfin_recent_library (NOT the full sensor, see the actual file)
+## REST sensor.jellyfin_recent_library (NOT the full sensor, see the actual file)
 <details>
     <summary>info</summary>
 
@@ -224,7 +224,7 @@ Using the url you just set up and added to your secrets.yaml:
 
 <br>
 
-### Template sensor.jellyfin_recent_card_data (NOT the full sensor, see the actual file)
+## Template sensor.jellyfin_recent_card_data (NOT the full sensor, see the actual file)
 <details>
     <summary>info</summary>
 
@@ -259,7 +259,7 @@ Using the url you just set up and added to your secrets.yaml:
 
 <br>
 
-### 5. Check config and restart
+## 5. Check config and restart
 
 Developer Tools → YAML → **Check Configuration**, then restart Home
 Assistant. On start, the sensors populate; the caching logic keeps the last good list if a
