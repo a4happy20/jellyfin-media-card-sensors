@@ -11,14 +11,18 @@ the card reads.
 > configuration and enable Home Assistant's packages feature. See the official docs:
 > **[Configuration packages — Home Assistant](https://www.home-assistant.io/docs/configuration/packages/)**.
 
-## What it creates
+<br>
 
-Two trigger-based template sensors:
+## What is it?
+
+Two trigger-based template sensors that pull information from a/multiple REST sensors:
 
 | Entity | Source | Purpose |
 |--------|--------|---------|
 | `sensor.jellyfin_recent_card_data` | one REST sensor per library id | Recently added episodes, merged and tagged by library |
 | `sensor.jellyfin_next_up_card_data` | Jellyfin `Shows/NextUp` | Your Jellyfin User's "Next Up" queue |
+
+<br>
 
 <br>
 
@@ -52,6 +56,8 @@ series_art`). Point the card's `entity` at whichever sensor you want to display.
 - Your Jellyfin **user ID** and the **ParentId** of each library you want to show. (see below)
 - (Optionally) The [Jellyfin Media Card](https://github.com/a4happy20/jellyfin-media-card)
   to actually render the data in the ui.
+
+<br>
 
 ## Setup
 
@@ -131,13 +137,13 @@ jellyfin_recent_library: "http://YOUR_JELLYFIN_HOST:8096/Users/<UID>/Items?Paren
 ### 3. Edit the template sensor
 
 You must also set the base image URL inside `jellyfin_media_card_sensors.yaml`: replace
-`http://YOUR_JELLYFIN_HOST:8096` (two places) with the address you setup in secrets.yaml
+`http://YOUR_JELLYFIN_HOST:8096` (two places) with the url of your Jellyfin instance.
 (This lives in the template rather than `secrets.yaml` because `!secret` can't be
 resolved inside a Jinja template string.)
 
 <br>
 
-### sensor.jellyfin_recent_card_data
+### Template sensor.jellyfin_recent_card_data (NOT the full sensor, see the actual file)
 
 <details>
     <summary>info</summary>
@@ -157,7 +163,7 @@ resolved inside a Jinja template string.)
 
 <br>
 
-### sensor.jellyfin_next_up_card_data
+### Template sensor.jellyfin_next_up_card_data (NOT the full sensor, see the actual file)
 <details>
     <summary>info</summary>
 
@@ -190,80 +196,90 @@ Using the url you just set up and added to your secrets.yaml:
 
 <br>
 
-#### sensor.jellyfin_recent_library
+### REST sensor.jellyfin_recent_library (NOT the full sensor, see the actual file)
+<details>
+    <summary>info</summary>
+
 ```yaml
-rest:
-  - resource: !secret jellyfin_recent_library            # your library url secret
-    scan_interval: 300
-    headers:
-      Authorization: !secret jellyfin_auth_header
-    sensor:
-      - name: "Jellyfin Recent Library"                 # sensor name
-        unique_id: jellyfin_recent_library              # sensor id
-        value_template: >
-          {{ (value_json.Items | default([])
-              | selectattr('LocationType','eq','FileSystem') | list | length)
-             if value_json is defined else 0 }}
-        json_attributes:
-          - Items
+    rest:
+      - resource: !secret jellyfin_recent_library            # your library url secret
+        scan_interval: 300
+        headers:
+          Authorization: !secret jellyfin_auth_header
+        sensor:
+          - name: "Jellyfin Recent Library"                 # sensor name
+            unique_id: jellyfin_recent_library              # sensor id
+            value_template: >
+              {{ (value_json.Items | default([])
+                  | selectattr('LocationType','eq','FileSystem') | list | length)
+                 if value_json is defined else 0 }}
+            json_attributes:
+              - Items
 ```
 
-#### sensor.jellyfin_recent_card_data
+</details>
+
+<br>
+
+### Template sensor.jellyfin_recent_card_data (NOT the full sensor, see the actual file)
+<details>
+    <summary>info</summary>
+
 ```yaml
-template:
-  - trigger:
-      - trigger: state
-        entity_id:
-          - sensor.jellyfin_recent_library            # your library REST sensor
-          - sensor.jellyfin_recent_library_2          # your additional library REST sensor
-          - sensor.jellyfin_recent_library_3          # your additional library REST sensor
-      - trigger: homeassistant
-        event: start
-    sensor:
-      - name: "Jellyfin Recent Card Data"             # sensor name
-        unique_id: jellyfin_recent_card_data          # sensor id
-        state: >
-          {% set eps = this.attributes.episodes | default([]) if this is defined else [] %}
-          {{ eps | length }}
-        attributes:
-          episodes: >
-            {% set base = 'http://YOUR_JELLYFIN_HOST:8096' %}
-            {# --- source libraries: entity + library key. Edit to add/remove. --- #}
-            {% set sources = [
-                 ('sensor.jellyfin_recent_library', 'library'),                 # your library REST sensor and a name (jellyfin-media-card will read this name for setting art_overrides)
-                 ('sensor.jellyfin_recent_library_2',   'library2'),            # your library REST sensor and a name (jellyfin-media-card will read this name for setting art_overrides)
-                 ('sensor.jellyfin_recent_library_3',   'library3')             # your library REST sensor and a name (jellyfin-media-card will read this name for setting art_overrides)
-            ] %}
+    template:
+      - trigger:
+          - trigger: state
+            entity_id:
+              - sensor.jellyfin_recent_library            # your library REST sensor
+              - sensor.jellyfin_recent_library_2          # your additional library REST sensor
+              - sensor.jellyfin_recent_library_3          # your additional library REST sensor
+          - trigger: homeassistant
+            event: start
+        sensor:
+          - name: "Jellyfin Recent Card Data"             # sensor name
+            unique_id: jellyfin_recent_card_data          # sensor id
+            state: >
+              {% set eps = this.attributes.episodes | default([]) if this is defined else [] %}
+              {{ eps | length }}
+            attributes:
+              episodes: >
+                {% set base = 'http://YOUR_JELLYFIN_HOST:8096' %}
+                {# --- source libraries: entity + library key. Edit to add/remove. --- #}
+                {% set sources = [
+                     ('sensor.jellyfin_recent_library', 'library'),                 # your library REST sensor and a name (jellyfin-media-card will read this name for setting art_overrides)
+                     ('sensor.jellyfin_recent_library_2',   'library2'),            # your library REST sensor and a name (jellyfin-media-card will read this name for setting art_overrides)
+                     ('sensor.jellyfin_recent_library_3',   'library3')             # your library REST sensor and a name (jellyfin-media-card will read this name for setting art_overrides)
+                ] %}
 ```
+
+</details>
 
 <br>
 
 ### 5. Check config and restart
 
-Developer Tools → YAML → **Check Configuration** (or `ha core check`), then restart Home
+Developer Tools → YAML → **Check Configuration**, then restart Home
 Assistant. On start, the sensors populate; the caching logic keeps the last good list if a
 fetch briefly returns nothing.
 
-## Using it with the card
+<br>
+
+## Using it with the jellyfin-media-card
 
 Once `sensor.jellyfin_recent_card_data` exists, add the sensor entity to the card in the dashboard:
 
 ```yaml
 type: custom:jellyfin-media-card
-entity: sensor.jellyfin_recent_card_data
+entity: sensor.jellyfin_recent_card_data OR sensor.jellyfin_next_up_card_data
 ```
+
+<br>
 
 Full card options are documented in the
 [Jellyfin Media Card README](https://github.com/a4happy20/jellyfin-media-card).
 
-## A note on the template + packages interaction
-
-This package uses **trigger-based** template sensors written in the modern list style
-(`template:` as a list of `- trigger:` blocks), which merges cleanly under packages. If you
-add your own template entities elsewhere, keep them in this same list style to avoid merge
-conflicts.
+<br>
 
 ## License
 
-Licensed under the [GNU General Public License v3.0](LICENSE) — the same license as the
-Jellyfin Media Card.
+Licensed under the [GNU General Public License v3.0](LICENSE)
