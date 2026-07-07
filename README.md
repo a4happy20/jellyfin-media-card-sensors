@@ -2,7 +2,7 @@
 
 The Home Assistant sensor configuration that powers the
 [**Jellyfin Media Card**](https://github.com/a4happy20/jellyfin-media-card).
-It fetches recently added and "Next Up" items from your Jellyfin server, tags each
+It fetches "Recently Added" and "Next Up" items from your Jellyfin server, tags each
 item by library, caches the last good result, and exposes them as template sensors
 the card reads.
 
@@ -17,24 +17,53 @@ Two trigger-based template sensors:
 
 | Entity | Source | Purpose |
 |--------|--------|---------|
-| `sensor.jellyfin_recent_card_data` | one REST sensor per library (YouTube / Anime / Ecchi in the example(author's note: "For the western friends, yes, I watch ecchi, bite me..., purely jest my friends. Make mods not wars")) | Recently added episodes, merged and tagged by library |
-| `sensor.jellyfin_next_up_card_data` | Jellyfin `Shows/NextUp` | The user's "Next Up" queue |
+| `sensor.jellyfin_recent_card_data` | one REST sensor per library id | Recently added episodes, merged and tagged by library |
+| `sensor.jellyfin_next_up_card_data` | Jellyfin `Shows/NextUp` | Your Jellyfin User's "Next Up" queue |
+
+<br>
 
 Each sensor's `episodes` attribute is a list of items shaped exactly the way the card
 expects (`id, series, season, episode, title, overview, library, added, episode_art,
 series_art`). Point the card's `entity` at whichever sensor you want to display.
 
+```json
+[
+    {
+        'id': 'episode_id',
+        'series': 'Series Name',
+        'season': 1,
+        'episode': 1,
+        'title': 'Episode Name',
+        'overview': "Episode Description",
+        'library': 'Library Name - defined in the sensor',
+        'added': 'Date Added',
+        'episode_art': 'URL Path to the episode's art',
+        'series_art': 'URL Patch to the series's poster art'
+    }
+]
+```
+
+<br>
+
 ## Prerequisites
 
 - A running Jellyfin server reachable from Home Assistant.
 - A Jellyfin **API key** (Jellyfin dashboard → Advanced → API Keys).
-- Your Jellyfin **user ID** and the **ParentId** of each library you want to show.
-- The [Jellyfin Media Card](https://github.com/a4happy20/jellyfin-media-card)
-  installed, to actually render the data.
+- Your Jellyfin **user ID** and the **ParentId** of each library you want to show. (see below)
+- (Optionally) The [Jellyfin Media Card](https://github.com/a4happy20/jellyfin-media-card)
+  to actually render the data in the ui.
 
 ## Setup
 
-### 1. Enable packages (once)
+### 0. Enable packages (Optional)
+<details>
+  <summary>Package Setup</summary>
+
+<br>
+
+  > See the official docs: **[Configuration packages — Home Assistant](https://www.home-assistant.io/docs/configuration/packages/)**.
+
+<br>
 
 In your `configuration.yaml`, tell Home Assistant to load a `packages` folder:
 
@@ -43,22 +72,36 @@ homeassistant:
   packages: !include_dir_named packages
 ```
 
-Be sure to create the packages folder `config/packages/jellyfin_media_card.yaml`
+Be sure to create the packages folder `config/packages/jellyfin_media_card_sensors.yaml`
 (If you already have a `homeassistant:` block, just add the `packages:` line under it.)
 Alternatively, include this one file directly:
 
 ```yaml
 homeassistant:
   packages:
-    jellyfin_media_card: !include jellyfin_media_card.yaml
+    jellyfin_media_card: !include jellyfin_media_card_sensors.yaml
 ```
 
-### 2. Add the package file
+</details>
 
-Copy `jellyfin_media_card.yaml` into your `config/packages/jellyfin_media_card.yaml` folder (create it if it
+<br>
+
+### 1. Add the package file
+
+Copy `jellyfin_media_card_sensors.yaml` into your `config/packages/jellyfin_media_card_sensors.yaml` folder (create it if it
 doesn't exist).
 
-### 3. Add your secrets
+<br>
+
+### 2. Add your secrets
+
+```yaml
+jellyfin_nextup_url: "http://YOUR_JELLYFIN_HOST:8096/Shows/NextUp?userId=<UID>&Limit=10&Fields=Overview,LocationType,Path,SeriesId,DateCreated,ParentIndexNumber,IndexNumber&EnableImages=true"
+jellyfin_recent_library: "http://YOUR_JELLYFIN_HOST:8096/Users/<UID>/Items?ParentId=<LIB_ID>&IncludeItemTypes=Episode&Recursive=true&SortBy=DateCreated&SortOrder=Descending&Fields=Overview,LocationType,Path,SeriesId,PremiereDate&Limit=3"
+```
+
+You can find your 
+
 
 Copy the entries from `secrets.yaml.example` into your `config/secrets.yaml` and fill in
 real values (API key, user ID, library IDs, and your Jellyfin host/URL). The URL WITHOUT
