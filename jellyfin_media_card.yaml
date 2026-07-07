@@ -13,9 +13,9 @@
 
 # ---- secrets.yaml needs, for each library (URL WITHOUT api_key; auth via header) ----
 #   jellyfin_auth_header: 'MediaBrowser Token="YOURKEY"'
-#   jellyfin_recent_youtube: "http://YOUR_JELLYFIN_HOST:8096/Users/<UID>/Items?ParentId=<LIB_ID>&IncludeItemTypes=Episode&Recursive=true&SortBy=DateCreated&SortOrder=Descending&Fields=Overview,LocationType,Path,SeriesId,PremiereDate&Limit=3"
-#   jellyfin_recent_anime:   "...ParentId=<LIB_ID>...&Limit=3"
-#   jellyfin_recent_ecchi:   "...ParentId=<LIB_ID>...&Limit=3"
+#   jellyfin_recent_library: "http://YOUR_JELLYFIN_HOST:8096/Users/<UID>/Items?ParentId=<LIB_ID>&IncludeItemTypes=Episode&Recursive=true&SortBy=DateCreated&SortOrder=Descending&Fields=Overview,LocationType,Path,SeriesId,PremiereDate&Limit=3"
+#   jellyfin_recent_library_2:   "...ParentId=<LIB_ID>...&Limit=3"
+#   jellyfin_recent_library_3:   "...ParentId=<LIB_ID>...&Limit=3"
 
 # ---- secrets.yaml ----
 #   jellyfin_auth_header: 'MediaBrowser Token="YOURKEY"'
@@ -26,13 +26,13 @@
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
 
 rest:
-  - resource: !secret jellyfin_recent_youtube
+  - resource: !secret jellyfin_recent_library
     scan_interval: 300
     headers:
       Authorization: !secret jellyfin_auth_header
     sensor:
-      - name: "Jellyfin Recent YouTube"
-        unique_id: jellyfin_recent_youtube
+      - name: "Jellyfin Recent Library"
+        unique_id: jellyfin_recent_library
         value_template: >
           {{ (value_json.Items | default([])
               | selectattr('LocationType','eq','FileSystem') | list | length)
@@ -40,13 +40,13 @@ rest:
         json_attributes:
           - Items
 
-  - resource: !secret jellyfin_recent_anime
+  - resource: !secret jellyfin_recent_library_2
     scan_interval: 300
     headers:
       Authorization: !secret jellyfin_auth_header
     sensor:
-      - name: "Jellyfin Recent Anime"
-        unique_id: jellyfin_recent_anime
+      - name: "Jellyfin Recent Library 2"
+        unique_id: jellyfin_recent_library_2
         value_template: >
           {{ (value_json.Items | default([])
               | selectattr('LocationType','eq','FileSystem') | list | length)
@@ -54,13 +54,13 @@ rest:
         json_attributes:
           - Items
 
-  - resource: !secret jellyfin_recent_ecchi
+  - resource: !secret jellyfin_recent_library_3
     scan_interval: 300
     headers:
       Authorization: !secret jellyfin_auth_header
     sensor:
-      - name: "Jellyfin Recent Ecchi"
-        unique_id: jellyfin_recent_ecchi
+      - name: "Jellyfin Recent Library 3"
+        unique_id: jellyfin_recent_library_3
         value_template: >
           {{ (value_json.Items | default([])
               | selectattr('LocationType','eq','FileSystem') | list | length)
@@ -92,9 +92,9 @@ template:
   - trigger:
       - trigger: state
         entity_id:
-          - sensor.jellyfin_recent_youtube
-          - sensor.jellyfin_recent_anime
-          - sensor.jellyfin_recent_ecchi
+          - sensor.jellyfin_recent_library
+          - sensor.jellyfin_recent_library_2
+          - sensor.jellyfin_recent_library_3
       - trigger: homeassistant
         event: start
     sensor:
@@ -105,12 +105,12 @@ template:
           {{ eps | length }}
         attributes:
           episodes: >
-            {% set base = 'https://YOUR_JELLYFIN_URL' %}
+            {% set base = 'http://YOUR_JELLYFIN_HOST:8096' %}
             {# --- source libraries: entity + library key. Edit to add/remove. --- #}
             {% set sources = [
-                 ('sensor.jellyfin_recent_youtube', 'youtube'),
-                 ('sensor.jellyfin_recent_anime',   'anime'),
-                 ('sensor.jellyfin_recent_ecchi',   'ecchi')
+                 ('sensor.jellyfin_recent_library', 'library'),
+                 ('sensor.jellyfin_recent_library_2',   'library2'),
+                 ('sensor.jellyfin_recent_library_3',   'library3')
             ] %}
             {% set ns = namespace(rows=[]) %}
             {% for ent, libkey in sources %}
@@ -152,7 +152,7 @@ template:
           {{ eps | length }}
         attributes:
           episodes: >
-            {% set base = 'https://YOUR_JELLYFIN_URL' %}
+            {% set base = 'http://YOUR_JELLYFIN_HOST:8096' %}
             {% set ns = namespace(rows=[]) %}
             {% for e in (state_attr('sensor.jellyfin_next_up','Items') or [])
                 | selectattr('LocationType','eq','FileSystem') | list %}
