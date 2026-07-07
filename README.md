@@ -262,7 +262,28 @@ Using the url you just set up and added to your secrets.yaml:
 
 <br>
 
-## 5. Check config and restart
+## 5. Recorder (exclude sensors)
+
+Depending on how many episodes you have the sensor monitor.
+You may want to exclude them from Recorder.
+With a large "Limit=10" you will get warnings related to the amount of data the sensor pulls.
+
+```yaml
+exclude:
+  entities:
+    - sensor.jellyfin_next_up
+    - sensor.jellyfin_recent_library
+    - sensor.jellyfin_recent_library_2
+    - sensor.jellyfin_recent_library_3
+    - sensor.jellyfin_recent_card_data
+    - sensor.jellyfin_library_card_data
+    - sensor.jellyfin_next_up_card_data
+```
+
+
+<br>
+
+## 6. Check config and restart
 
 Developer Tools → YAML → **Check Configuration**, then restart Home
 Assistant. On start, the sensors populate; the caching logic keeps the last good list if a
