@@ -42,7 +42,7 @@ series_art`). Point the card's `entity` at whichever sensor you want to display.
         'library': 'Library Name - defined in the sensor',
         'added': 'Date Added',
         'episode_art': 'URL Path to the episode's art',
-        'series_art': 'URL Patch to the series's poster art'
+        'series_art': 'URL Path to the series's poster art'
     }
 ]
 ```
