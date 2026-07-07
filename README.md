@@ -99,7 +99,7 @@ Alternatively, include this one file directly:
 ```yaml
 homeassistant:
   packages:
-    jellyfin_media_card: !include jellyfin_media_card_sensors.yaml
+    jellyfin_media_card_sensors: !include jellyfin_media_card_sensors.yaml
 ```
 
 </details>
