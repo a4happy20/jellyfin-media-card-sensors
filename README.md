@@ -13,6 +13,9 @@ the card reads.
 
 <br>
 
+![license](https://img.shields.io/badge/License-GPLv3-blue.svg)
+
+
 ## What is it?
 
 Two trigger-based template sensors that pull information from a/multiple REST sensors:
