@@ -135,6 +135,9 @@ jellyfin_nextup_url: "http://YOUR_JELLYFIN_HOST:8096/Shows/NextUp?userId=<UID>&L
 jellyfin_recent_library: "http://YOUR_JELLYFIN_HOST:8096/Users/<UID>/Items?ParentId=<LIB_ID>&IncludeItemTypes=Episode&Recursive=true&SortBy=DateCreated&SortOrder=Descending&Fields=Overview,LocationType,Path,SeriesId,PremiereDate&Limit=3"
 ```
 
+You can setup other urls by consulting the Jellyfin api
+**[Jellyfin API](https://api.jellyfin.org/#tag/Library/operation/GetResumeItems)**
+
 <br>
 
 ## 3. Edit the template sensor
