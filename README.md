@@ -55,6 +55,17 @@ series_art`). Point the card's `entity` at whichever sensor you want to display.
 
 ## Setup
 
+<br>
+
+### Easy to setup
+High level overview:
+
+    • add the sensors to home assistant
+    • add the urls to your secrets file - replacing api key, user id, and library ids
+    • edit the template sensor pointing the url to your jellyfin instance
+
+<br>
+
 ### 0. Enable packages (Optional)
 <details>
   <summary>Package Setup</summary>
@@ -88,78 +99,107 @@ homeassistant:
 
 ### 1. Add the package file
 
-Copy `jellyfin_media_card_sensors.yaml` into your `config/packages/jellyfin_media_card_sensors.yaml` folder (create it if it
-doesn't exist).
+Copy `jellyfin_media_card_sensors.yaml` into your `config/packages/jellyfin_media_card_sensors.yaml` folder.
+
+> You don't need to setup packages if you don't want to.
+> Instead you would just put the REST sensors and Template sensors
+> where they belong in your setup.
 
 <br>
 
 ### 2. Add your secrets
 
 ```yaml
+# ======================================================================================
+# Find the values:
+#   <UID>       Jellyfin user ID  (Jellyfin dashboard > Users > click user > URL)
+#   YOURKEY     Jellyfin API key  (Jellyfin dashboard > Advanced > API Keys)
+#   <LIB_ID>    Library ParentId  (open a library in Jellyfin, copy the id in the URL)
+#   Limit=3     Amount of items   (Set how many episodes the sensor should detect)
+#   Limit=10 
+# =====================================================================================
+```
+
+```yaml
+jellyfin_auth_header: 'MediaBrowser Token="YOURKEY"'
 jellyfin_nextup_url: "http://YOUR_JELLYFIN_HOST:8096/Shows/NextUp?userId=<UID>&Limit=10&Fields=Overview,LocationType,Path,SeriesId,DateCreated,ParentIndexNumber,IndexNumber&EnableImages=true"
 jellyfin_recent_library: "http://YOUR_JELLYFIN_HOST:8096/Users/<UID>/Items?ParentId=<LIB_ID>&IncludeItemTypes=Episode&Recursive=true&SortBy=DateCreated&SortOrder=Descending&Fields=Overview,LocationType,Path,SeriesId,PremiereDate&Limit=3"
 ```
 
-You can find your 
+<br>
 
+### 3. Edit the template sensor
 
-Copy the entries from `secrets.yaml.example` into your `config/secrets.yaml` and fill in
-real values (API key, user ID, library IDs, and your Jellyfin host/URL). The URL WITHOUT
-`api_key` — auth is sent via the `Authorization` header.
-
-You must also set the base image URL inside `jellyfin_media_card.yaml`: replace
-`https://YOUR_JELLYFIN_URL` (two places) with the address the card's images should load
-from. (This lives in the template rather than `secrets.yaml` because `!secret` can't be
+You must also set the base image URL inside `jellyfin_media_card_sensors.yaml`: replace
+`http://YOUR_JELLYFIN_HOST:8096` (two places) with the address you setup in secrets.yaml
+(This lives in the template rather than `secrets.yaml` because `!secret` can't be
 resolved inside a Jinja template string.)
 
-#### sensor.jellyfin_recent_card_data
+<br>
+
+### sensor.jellyfin_recent_card_data
+
+<details>
+    <summary>info</summary>
+
 ```yaml
-    sensor:
-      - name: "Jellyfin Recent Card Data"
-        unique_id: jellyfin_recent_card_data
-        state: >
-          {% set eps = this.attributes.episodes | default([]) if this is defined else [] %}
-          {{ eps | length }}
-        attributes:
-          episodes: >
-            {% set base = 'https://YOUR_JELLYFIN_URL' %}
+        sensor:
+          - name: "Jellyfin Recent Card Data"
+            unique_id: jellyfin_recent_card_data
+            state: >
+              {% set eps = this.attributes.episodes | default([]) if this is defined else [] %}
+              {{ eps | length }}
+            attributes:
+              episodes: >
+                {% set base = 'http://YOUR_JELLYFIN_HOST:8096' %}
 ```
-#### sensor.jellyfin_next_up_card_data
+</details>
+
+<br>
+
+### sensor.jellyfin_next_up_card_data
+<details>
+    <summary>info</summary>
+
 ```yaml
-    sensor:
-      - name: "Jellyfin Next Up Card Data"
-        unique_id: jellyfin_next_up_card_data
-        state: >
-          {% set eps = this.attributes.episodes | default([]) if this is defined else [] %}
-          {{ eps | length }}
-        attributes:
-          episodes: >
-            {% set base = 'https://YOUR_JELLYFIN_URL' %}
+        sensor:
+          - name: "Jellyfin Next Up Card Data"
+            unique_id: jellyfin_next_up_card_data
+            state: >
+              {% set eps = this.attributes.episodes | default([]) if this is defined else [] %}
+              {{ eps | length }}
+            attributes:
+              episodes: >
+                {% set base = 'http://YOUR_JELLYFIN_HOST:8096' %}
 ```
+</details>
+
+<br>
 
 ### 4. Adjust libraries
 
-The example ships three "recently added" libraries. To add or remove one, edit three places:
-1. the secrets.yaml (see example file),
-2. the REST sensor block,
-3. the template sensor's `trigger` → `entity_id` list, and
-4. the template sensor's `sources` list.
-
-#### See the secrets.yaml example
+Using the url you just set up and added to your secrets.yaml:
+1. you need to tell the sensor what library to monitor,
+2. locate the REST sensor block, and add your secret
 ```yaml
-jellyfin_recent_youtube: "http://YOUR_JELLYFIN_HOST:8096/Users/<UID>/Items?ParentId=<LIB_ID>&IncludeItemTypes=Episode&Recursive=true&SortBy=DateCreated&SortOrder=Descending&Fields=Overview,LocationType,Path,SeriesId,PremiereDate&Limit=3"
+- resource: !secret jellyfin_recent_library
 ```
+4. create separate sensors for each library you want to monitor
+5. the template sensor's `trigger` → `entity_id` list, and
+6. the template sensor's `sources` list.
 
-#### sensor.jellyfin_recent_youtube
+<br>
+
+#### sensor.jellyfin_recent_library
 ```yaml
 rest:
-  - resource: !secret jellyfin_recent_youtube
+  - resource: !secret jellyfin_recent_library            # your library url secret
     scan_interval: 300
     headers:
       Authorization: !secret jellyfin_auth_header
     sensor:
-      - name: "Jellyfin Recent YouTube"
-        unique_id: jellyfin_recent_youtube
+      - name: "Jellyfin Recent Library"                 # sensor name
+        unique_id: jellyfin_recent_library              # sensor id
         value_template: >
           {{ (value_json.Items | default([])
               | selectattr('LocationType','eq','FileSystem') | list | length)
@@ -174,28 +214,29 @@ template:
   - trigger:
       - trigger: state
         entity_id:
-          - sensor.jellyfin_recent_youtube
-          - sensor.jellyfin_recent_anime
-          - sensor.jellyfin_recent_ecchi
+          - sensor.jellyfin_recent_library            # your library REST sensor
+          - sensor.jellyfin_recent_library_2          # your additional library REST sensor
+          - sensor.jellyfin_recent_library_3          # your additional library REST sensor
       - trigger: homeassistant
         event: start
     sensor:
-      - name: "Jellyfin Recent Card Data"
-        unique_id: jellyfin_recent_card_data
+      - name: "Jellyfin Recent Card Data"             # sensor name
+        unique_id: jellyfin_recent_card_data          # sensor id
         state: >
           {% set eps = this.attributes.episodes | default([]) if this is defined else [] %}
           {{ eps | length }}
         attributes:
           episodes: >
-            {% set base = 'https://YOUR_JELLYFIN_URL' %}
+            {% set base = 'http://YOUR_JELLYFIN_HOST:8096' %}
             {# --- source libraries: entity + library key. Edit to add/remove. --- #}
             {% set sources = [
-                 ('sensor.jellyfin_recent_youtube', 'youtube'),
-                 ('sensor.jellyfin_recent_anime',   'anime'),
-                 ('sensor.jellyfin_recent_ecchi',   'ecchi')
+                 ('sensor.jellyfin_recent_library', 'library'),                 # your library REST sensor and a name (jellyfin-media-card will read this name for setting art_overrides)
+                 ('sensor.jellyfin_recent_library_2',   'library2'),            # your library REST sensor and a name (jellyfin-media-card will read this name for setting art_overrides)
+                 ('sensor.jellyfin_recent_library_3',   'library3')             # your library REST sensor and a name (jellyfin-media-card will read this name for setting art_overrides)
             ] %}
 ```
 
+<br>
 
 ### 5. Check config and restart
 
