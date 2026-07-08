@@ -315,9 +315,9 @@ Each sensor's `episodes` attribute is a list of items shaped like this — one o
     "title": "Episode Name",
     "overview": "Episode description",
     "library": "Library Name (set in the sensor)",
-    "added": "Date added",
     "episode_art": "URL to the episode's art",
-    "series_art": "URL to the series' poster art"
+    "series_art": "URL to the series' poster art",
+    "added": "Date added"
   }
 ]
 ```
