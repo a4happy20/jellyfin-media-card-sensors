@@ -39,7 +39,6 @@ library, cache the last good result, and expose it all as tidy template sensors 
 - [The data the card receives](#the-data-the-card-receives)
 - [Using it with the card](#using-it-with-the-card)
 - [Troubleshooting](#troubleshooting)
-- [License](#license)
 
 <br>
 
