@@ -20,6 +20,7 @@
 # ---- secrets.yaml ----
 #   jellyfin_auth_header: 'MediaBrowser Token="YOURKEY"'
 #   jellyfin_nextup_url: "http://YOUR_JELLYFIN_HOST:8096/Shows/NextUp?userId=<UID>&Limit=10&Fields=Overview,LocationType,Path,SeriesId,DateCreated,ParentIndexNumber,IndexNumber&EnableImages=true"
+#   jellyfin_continue_url: "http://YOUR_JELLYFIN_HOST:8096/Users/<UID>/Items/Resume?Limit=10&Fields=Overview,LocationType,Path,SeriesId,DateCreated,ParentIndexNumber,IndexNumber,UserData&EnableImages=true&MediaTypes=Video"
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
 #------------------------------------------------------REST SENSOR----------------------------------------------------------------------------------------------------------------------------------------------------------#
@@ -82,6 +83,20 @@ rest:
         json_attributes:
           - Items
 
+
+  - resource: !secret jellyfin_continue_url
+    scan_interval: 300
+    headers:
+      Authorization: !secret jellyfin_auth_header
+    sensor:
+      - name: "Jellyfin Continue Watching"
+        unique_id: jellyfin_continue_watching
+        value_template: >
+          {{ (value_json.Items | default([])
+              | selectattr('LocationType','eq','FileSystem') | list | length)
+             if value_json is defined else 0 }}
+        json_attributes:
+          - Items
 
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
 #------------------------------------------------------TEMPLATE SENSOR------------------------------------------------------------------------------------------------------------------------------------------------------#
