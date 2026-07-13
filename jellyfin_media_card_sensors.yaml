@@ -189,3 +189,41 @@ template:
             {% else %}
               {{ ns.rows }}
             {% endif %}
+
+
+  - trigger:
+      - trigger: state
+        entity_id:
+          - sensor.jellyfin_continue_watching
+      - trigger: homeassistant
+        event: start
+    variables:
+      jf_rows: >
+        {% set base = 'http://YOUR_JELLYFIN_HOST:8096' %}
+        {% set ns = namespace(rows=[]) %}
+        {% for e in (state_attr('sensor.jellyfin_continue_watching','Items') or [])
+            | selectattr('LocationType','eq','FileSystem') | list %}
+          {% set ticks = e.UserData.PlaybackPositionTicks | default(0) %}
+          {% set ns.rows = ns.rows + [{
+            'id': e.Id,
+            'type': (e.Type | default('Episode')) | lower,
+            'series': e.SeriesName | default(e.Name) | default(''),
+            'season': e.ParentIndexNumber | default(0),
+            'episode': e.IndexNumber | default(0),
+            'title': e.Name | default(''),
+            'overview': e.Overview | default(''),
+            'library': 'continue',
+            'added': e.DateCreated | default(e.PremiereDate) | default(''),
+            'resume_seconds': (ticks / 10000000) | int,
+            'resume_pct': e.UserData.PlayedPercentage | default(0) | round(0),
+            'episode_art': base ~ '/Items/' ~ e.Id ~ '/Images/Primary',
+            'series_art': base ~ '/Items/' ~ (e.SeriesId | default(e.Id)) ~ '/Images/Primary'
+          }] %}
+        {% endfor %}
+        {{ ns.rows }}
+    sensor:
+      - name: "Jellyfin Continue Watching Card Data"
+        unique_id: jellyfin_continue_watching_card_data
+        state: "{{ jf_rows | length }}"
+        attributes:
+          episodes: "{{ jf_rows }}"

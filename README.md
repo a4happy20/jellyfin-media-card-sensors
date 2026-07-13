@@ -51,6 +51,7 @@ that read from one or more REST sensors and hand the card a clean, ready-to-disp
 |---|---|---|
 | `sensor.jellyfin_recent_card_data` | one REST sensor **per library** | Recently added episodes, merged and tagged by library |
 | `sensor.jellyfin_next_up_card_data` | Jellyfin `Shows/NextUp` | Your Jellyfin user's **Next Up** queue |
+| `sensor.jellyfin_continue_watching_card_data` | Jellyfin `Shows/ContinueWatching` | Your Jellyfin user's **Continue Watching** queue |
 
 Each sensor's `episodes` attribute is a list shaped exactly the way the card expects. In the card,
 just point the `entity` option at whichever sensor you want to display.
@@ -161,6 +162,8 @@ jellyfin_auth_header: 'MediaBrowser Token="YOURKEY"'
 jellyfin_nextup_url: "http://YOUR_JELLYFIN_HOST:8096/Shows/NextUp?userId=<UID>&Limit=10&Fields=Overview,LocationType,Path,SeriesId,DateCreated,ParentIndexNumber,IndexNumber&EnableImages=true"
 
 jellyfin_recent_library: "http://YOUR_JELLYFIN_HOST:8096/Users/<UID>/Items?ParentId=<LIB_ID>&IncludeItemTypes=Episode&Recursive=true&SortBy=DateCreated&SortOrder=Descending&Fields=Overview,LocationType,Path,SeriesId,PremiereDate&Limit=3"
+
+jellyfin_continue_url: "http://YOUR_JELLYFIN_HOST:8096/Users/<UID>/Items/Resume?Limit=10&Fields=Overview,LocationType,Path,SeriesId,DateCreated,ParentIndexNumber,IndexNumber,UserData&EnableImages=true&MediaTypes=Video"
 ```
 
 **What to swap out:**
@@ -174,7 +177,7 @@ jellyfin_recent_library: "http://YOUR_JELLYFIN_HOST:8096/Users/<UID>/Items?Paren
 | `Limit=3` / `Limit=10` | How many items each sensor should return |
 
 > [!TIP]
-> Want a different feed (e.g. *Resume/Continue Watching*)? You can build your own URLs from the
+> Want a different feed? You can build your own URLs from the
 > [Jellyfin API reference](https://api.jellyfin.org/#tag/Library/operation/GetResumeItems) and drop
 > them into `secrets.yaml` the same way.
 
@@ -286,8 +289,10 @@ recorder:
       - sensor.jellyfin_recent_library_2
       - sensor.jellyfin_recent_library_3
       - sensor.jellyfin_recent_card_data
+      - sensor.jellyfin_continue_watching
       - sensor.jellyfin_library_card_data
       - sensor.jellyfin_next_up_card_data
+      - sensor.jellyfin_continue_watching_card_data
 ```
 
 <br>
@@ -332,7 +337,7 @@ Once `sensor.jellyfin_recent_card_data` exists, add it to a card on your dashboa
 
 ```yaml
 type: custom:jellyfin-media-card
-entity: sensor.jellyfin_recent_card_data   # or sensor.jellyfin_next_up_card_data
+entity: sensor.jellyfin_recent_card_data   # or sensor.jellyfin_next_up_card_data / sensor.jellyfin_continue_watching_card_data
 ```
 
 Every card option is documented in the
