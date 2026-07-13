@@ -69,7 +69,7 @@ flowchart LR
     C --> D["🖼️ Jellyfin Media Card"]
 ```
 
-- **REST sensors** do the fetching — one per Jellyfin library you want to show, plus one for *Next Up*.
+- **REST sensors** do the fetching — one per Jellyfin library you want to show, and/or one for *Next Up*, *Continue Watching*.
 - **Template sensors** merge those results, tag each episode with its library name, and keep the last
   good list if a fetch briefly comes back empty (that's the caching).
 - **The card** reads the template sensor and renders it.
