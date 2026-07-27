@@ -11,6 +11,8 @@ library, cache the last good result, and expose it all as tidy template sensors 
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Package-41BDF5?logo=homeassistant&logoColor=white)](https://www.home-assistant.io/docs/configuration/packages/)
 [![Jellyfin](https://img.shields.io/badge/Jellyfin-API-00A4DC?logo=jellyfin&logoColor=white)](https://api.jellyfin.org/)
 
+<img src="https://raw.githubusercontent.com/a4happy20/jellyfin-media-card-sensors/main/images/header.png" width="1280" alt="Header">
+
 </div>
 
 ---
