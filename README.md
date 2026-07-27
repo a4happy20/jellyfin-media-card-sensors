@@ -10,6 +10,7 @@ library, cache the last good result, and expose it all as tidy template sensors 
 [![license](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Package-41BDF5?logo=homeassistant&logoColor=white)](https://www.home-assistant.io/docs/configuration/packages/)
 [![Jellyfin](https://img.shields.io/badge/Jellyfin-API-00A4DC?logo=jellyfin&logoColor=white)](https://api.jellyfin.org/)
+[![Media Display Card](https://img.shields.io/badge/Media%20Display%20Card-Renders%20this-00A4DC)](https://github.com/a4happy20/media-display-card)
 
 <img src="https://raw.githubusercontent.com/a4happy20/jellyfin-media-card-sensors/main/images/header.png" width="1280" alt="Header">
 
