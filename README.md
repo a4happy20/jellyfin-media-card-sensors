@@ -2,7 +2,7 @@
 
 # 📺 Jellyfin Media Card — Sensors
 
-**The Home Assistant sensors that feed the [Jellyfin Media Card](https://github.com/a4happy20/jellyfin-media-card).**
+**The Home Assistant sensors that feed the [Media Display Card](https://github.com/a4happy20/media-display-card).**
 
 They pull *Recently Added* and *Next Up* items from your Jellyfin server, tag each item by
 library, cache the last good result, and expose it all as tidy template sensors the card can read.
@@ -68,7 +68,7 @@ You're wiring up a short chain. Data flows left to right:
 flowchart LR
     A["🗄️ Jellyfin Server"] -->|REST API| B["📡 REST sensors<br/>(one per library)"]
     B --> C["🧩 Template sensors<br/>merge · tag · cache"]
-    C --> D["🖼️ Jellyfin Media Card"]
+    C --> D["🖼️ Media Display Card"]
 ```
 
 - **REST sensors** do the fetching — one per Jellyfin library you want to show, and/or one for *Next Up*, *Continue Watching*.
@@ -85,7 +85,7 @@ Once you understand these three pieces, the setup steps below map cleanly onto t
 - A running **Jellyfin server** reachable from Home Assistant.
 - A **Jellyfin API key** and your **user ID**.
 - The **ParentId** of each library you want to display.
-- *(Optional but expected)* the [Jellyfin Media Card](https://github.com/a4happy20/jellyfin-media-card)
+- *(Optional but expected)* the [Media Display Card](https://github.com/a4happy20/media-display-card)
   installed, so there's something to render the data.
 
 Here's where to grab each value from your Jellyfin dashboard:
@@ -272,7 +272,7 @@ template:
 </details>
 
 > [!TIP]
-> The **name** in the `sources` list (`library`, `library2`, …) is what the Jellyfin Media Card reads
+> The **name** in the `sources` list (`library`, `library2`, …) is what the Media Display Card reads
 > when you set `art_overrides`. Pick names that make sense to you.
 
 <br>
@@ -338,12 +338,12 @@ is working with.
 Once `sensor.jellyfin_recent_card_data` exists, add it to a card on your dashboard:
 
 ```yaml
-type: custom:jellyfin-media-card
+type: custom:media-display-card
 entity: sensor.jellyfin_recent_card_data   # or sensor.jellyfin_next_up_card_data / sensor.jellyfin_continue_watching_card_data
 ```
 
 Every card option is documented in the
-[Jellyfin Media Card README](https://github.com/a4happy20/jellyfin-media-card).
+[Media Display Card README](https://github.com/a4happy20/media-display-card).
 
 <br>
 
